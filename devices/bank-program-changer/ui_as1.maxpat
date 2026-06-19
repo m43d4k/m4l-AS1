@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 256.0, 523.0, 1125.0, 746.0 ],
+		"rect" : [ 594.0, 512.0, 787.0, 718.0 ],
 		"openrect" : [ 0.0, 0.0, 0.0, 159.0 ],
 		"openinpresentation" : 1,
 		"default_fontsize" : 10.0,
@@ -53,7 +53,7 @@
 					"parameter_enable" : 1,
 					"patching_rect" : [ 282.0, 511.0, 101.0, 32.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 44.0, 42.0, 62.0, 30.0 ],
+					"presentation_rect" : [ 44.0, 74.0, 62.0, 30.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "val1", "val2" ],
@@ -88,14 +88,14 @@
 					"id" : "obj-bank",
 					"maxclass" : "live.tab",
 					"num_lines_patching" : 1,
-					"num_lines_presentation" : 10,
+					"num_lines_presentation" : 5,
 					"numinlets" : 1,
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "float" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 80.0, 105.0, 180.0, 18.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 2.0, 7.0, 38.0, 122.0 ],
+					"presentation_rect" : [ 2.0, 39.0, 40.0, 101.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "U1", "U2", "U3", "U4", "U5", "F1", "F2", "F3", "F4", "F5" ],
@@ -115,15 +115,16 @@
 			}
 , 			{
 				"box" : 				{
+					"fontsize" : 18.0,
 					"id" : "obj-pc",
 					"maxclass" : "live.numbox",
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "float" ],
 					"parameter_enable" : 1,
-					"patching_rect" : [ 80.0, 237.0, 56.0, 15.0 ],
+					"patching_rect" : [ 80.0, 237.0, 83.0, 25.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 44.0, 80.0, 62.0, 15.0 ],
+					"presentation_rect" : [ 2.0, 6.0, 106.0, 25.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_longname" : "Program",
@@ -184,7 +185,7 @@
 					"numoutlets" : 0,
 					"patching_rect" : [ 360.0, 40.0, 34.0, 17.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 41.0, 102.0, 34.0, 17.0 ],
+					"presentation_rect" : [ 44.0, 108.0, 34.0, 17.0 ],
 					"text" : "Delay"
 				}
 
@@ -223,7 +224,7 @@
 					"parameter_enable" : 1,
 					"patching_rect" : [ 402.0, 41.0, 72.0, 15.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 44.0, 118.0, 62.0, 15.0 ],
+					"presentation_rect" : [ 46.0, 124.0, 60.0, 15.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "0 ms", "5 ms", "10 ms" ],
@@ -361,19 +362,38 @@
 			}
 , 			{
 				"box" : 				{
+					"activebgcolor" : [ 1.0, 0.568627450980392, 0.764705882352941, 1.0 ],
+					"activebgoncolor" : [ 0.094117647058824, 0.098039215686275, 0.117647058823529, 1.0 ],
+					"activetextcolor" : [ 0.015686274509804, 0.019607843137255, 0.023529411764706, 1.0 ],
+					"activetextoncolor" : [ 0.490196078431373, 0.501960784313725, 0.533333333333333, 1.0 ],
 					"id" : "obj-clockmode",
 					"maxclass" : "live.text",
-					"mode" : 1,
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
 					"parameter_enable" : 1,
 					"patching_rect" : [ 80.0, 330.0, 104.0, 20.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 44.0, 137.0, 62.0, 20.0 ],
+					"presentation_rect" : [ 2.0, 144.0, 106.0, 20.0 ],
 					"saved_attribute_attributes" : 					{
+						"activebgcolor" : 						{
+							"expression" : "themecolor.live_control_selection"
+						}
+,
+						"activebgoncolor" : 						{
+							"expression" : "themecolor.live_control_bg"
+						}
+,
+						"activetextcolor" : 						{
+							"expression" : "themecolor.live_control_fg_on"
+						}
+,
+						"activetextoncolor" : 						{
+							"expression" : "themecolor.live_control_text_zombie"
+						}
+,
 						"valueof" : 						{
-							"parameter_enum" : [ "SYNC", "MANUAL" ],
+							"parameter_enum" : [ "val1", "val2" ],
 							"parameter_longname" : "Sequencer Play",
 							"parameter_mmax" : 1,
 							"parameter_modmode" : 0,
@@ -383,23 +403,9 @@
 
 					}
 ,
-					"text" : "SYNC",
-					"texton" : "MANUAL",
+					"text" : "SEQ SYNC",
+					"texton" : "SEQ MANUAL",
 					"varname" : "midi_clock_mode"
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontsize" : 9.5,
-					"id" : "obj-clockmode-label",
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 44.0, 306.0, 28.0, 17.0 ],
-					"presentation" : 1,
-					"presentation_rect" : [ 10.0, 139.0, 28.0, 17.0 ],
-					"text" : "SEQ"
 				}
 
 			}
@@ -685,7 +691,7 @@
 					"parameter_enable" : 1,
 					"patching_rect" : [ 231.0, 366.0, 93.0, 32.0 ],
 					"presentation" : 1,
-					"presentation_rect" : [ 44.0, 7.0, 62.0, 30.0 ],
+					"presentation_rect" : [ 44.0, 39.0, 62.0, 30.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
 							"parameter_enum" : [ "val1", "val2" ],
@@ -796,7 +802,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-clockmode", 0 ],
-					"order" : 2,
+					"order" : 1,
 					"source" : [ "obj-delay-init", 0 ]
 				}
 
@@ -812,7 +818,7 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-pc", 0 ],
-					"order" : 1,
+					"order" : 2,
 					"source" : [ "obj-delay-init", 0 ]
 				}
 
@@ -875,15 +881,15 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-set-current", 0 ],
-					"source" : [ "obj-recv-current", 0 ]
+					"destination" : [ "obj-set-clockmode", 0 ],
+					"source" : [ "obj-recv-clockmode", 0 ]
 				}
 
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-set-clockmode", 0 ],
-					"source" : [ "obj-recv-clockmode", 0 ]
+					"destination" : [ "obj-set-current", 0 ],
+					"source" : [ "obj-recv-current", 0 ]
 				}
 
 			}
