@@ -98,7 +98,7 @@
 					"presentation_rect" : [ 2.0, 39.0, 40.0, 101.0 ],
 					"saved_attribute_attributes" : 					{
 						"valueof" : 						{
-							"parameter_enum" : [ "U1", "U2", "U3", "U4", "U5", "F1", "F2", "F3", "F4", "F5" ],
+							"parameter_enum" : [ "U1", "F1", "U2", "F2", "U3", "F3", "U4", "F4", "U5", "F5" ],
 							"parameter_longname" : "Bank",
 							"parameter_mmax" : 9,
 							"parameter_modmode" : 0,

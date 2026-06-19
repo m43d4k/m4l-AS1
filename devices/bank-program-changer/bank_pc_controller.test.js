@@ -6,6 +6,8 @@ const assert = require("node:assert/strict");
 const {
   DEFAULT_STATE,
   applyNamedAction,
+  bankIndexToBankTabIndex,
+  bankTabIndexToBankIndex,
   buildClockModeMessages,
   buildMidiMessages,
   buildNrpnMessages,
@@ -19,6 +21,17 @@ const {
   reduceState,
   sanitizeState,
 } = require("./bank_pc_controller_as1.js");
+
+test("bank tab rows map to the AS-1 bank order", () => {
+  assert.deepEqual(
+    Array.from({ length: 10 }, (_, index) => bankTabIndexToBankIndex(index)),
+    [0, 5, 1, 6, 2, 7, 3, 8, 4, 9]
+  );
+  assert.deepEqual(
+    Array.from({ length: 10 }, (_, index) => bankIndexToBankTabIndex(index)),
+    [0, 2, 4, 6, 8, 1, 3, 5, 7, 9]
+  );
+});
 
 class FakeScheduler {
   constructor() {
@@ -141,7 +154,7 @@ test("controller sync contains bank, program, delay, and MIDI clock mode", () =>
   const { controller, ui, status } = createRuntime({ bankIndex: 2, pcDisplay: 44, delay: 10 });
   controller.loadbang();
   assert.deepEqual(ui, [
-    ["set_bankindex", 2],
+    ["set_bankindex", 4],
     ["set_pc", 44],
     ["set_delay", 10],
     ["set_clockmode", 0],
@@ -238,7 +251,7 @@ test("restore coalesces saved program state and restores MIDI clock mode", () =>
   controller.restoreend();
   assert.deepEqual(controller.getState(), { bankIndex: 5, pcDisplay: 44, delay: 10, clockMode: 1 });
   assert.deepEqual(ui, [
-    ["set_bankindex", 5],
+    ["set_bankindex", 1],
     ["set_pc", 44],
     ["set_delay", 10],
     ["set_clockmode", 1],
@@ -258,7 +271,7 @@ test("restore does not let bank reset or UI sync overwrite a saved program", () 
 
   controller.restoreend();
   assert.deepEqual(ui, [
-    ["set_bankindex", 5],
+    ["set_bankindex", 1],
     ["set_pc", 73],
     ["set_delay", 0],
     ["set_clockmode", 0],

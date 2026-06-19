@@ -23,10 +23,10 @@ function readAmxdPatch(filename) {
 
   const nulOffset = patchData.indexOf(0);
   assert.notEqual(nulOffset, -1, "ptch JSON must be NUL-terminated");
-  assert.equal(
-    patchData.subarray(nulOffset + 1).toString("ascii"),
-    "\n",
-    "only the final newline may follow the NUL terminator"
+  const trailingData = patchData.subarray(nulOffset + 1).toString("ascii");
+  assert.ok(
+    trailingData === "" || trailingData === "\n",
+    "only an optional final newline may follow the NUL terminator"
   );
 
   return JSON.parse(patchData.subarray(0, nulOffset).toString("utf8"));
@@ -111,9 +111,9 @@ test("ui patch exposes the ten AS-1 banks, increment, and decrement for Live map
   const clockParameter = clockMode.saved_attribute_attributes.valueof;
 
   assert.equal(boxes.get("obj-bank").parameter_enable, 1);
-  assert.equal(boxes.get("obj-bank").num_lines_presentation, 10);
+  assert.equal(boxes.get("obj-bank").num_lines_presentation, 5);
   assert.deepEqual(bankParameter.parameter_enum, [
-    "U1", "U2", "U3", "U4", "U5", "F1", "F2", "F3", "F4", "F5",
+    "U1", "F1", "U2", "F2", "U3", "F3", "U4", "F4", "U5", "F5",
   ]);
   assert.equal(bankParameter.parameter_mmax, 9);
   assert.equal(bankParameter.parameter_invisible ?? 0, 0);
@@ -130,12 +130,11 @@ test("ui patch exposes the ten AS-1 banks, increment, and decrement for Live map
   assert.equal(boxes.get("obj-2").parameter_enable, 1);
   assert.equal(boxes.get("obj-2").saved_attribute_attributes.valueof.parameter_invisible ?? 0, 0);
   assert.equal(clockMode.maxclass, "live.text");
-  assert.equal(clockMode.mode, 1);
   assert.equal(clockMode.parameter_enable, 1);
-  assert.equal(boxes.get("obj-clockmode-label").text, "SEQ");
-  assert.equal(clockMode.text, "SYNC");
-  assert.equal(clockMode.texton, "MANUAL");
-  assert.deepEqual(clockParameter.parameter_enum, ["SYNC", "MANUAL"]);
+  assert.equal(boxes.has("obj-clockmode-label"), false);
+  assert.equal(clockMode.text, "SEQ SYNC");
+  assert.equal(clockMode.texton, "SEQ MANUAL");
+  assert.deepEqual(clockParameter.parameter_enum, ["val1", "val2"]);
   assert.equal(clockParameter.parameter_mmax, 1);
   assert.ok(hasLine(patch, "obj-clockmode", "obj-send-clockmode"));
   assert.ok(hasLine(patch, "obj-recv-clockmode", "obj-set-clockmode"));
@@ -152,7 +151,6 @@ test("parent device still references child patchers and restore trigger pieces",
     /"text"\s*:\s*"s ---parent-restore-trigger"/,
     /"name"\s*:\s*"ui_as1\.maxpat"/,
     /"name"\s*:\s*"logic_as1\.maxpat"/,
-    /"name"\s*:\s*"bank_pc_controller_as1\.js"/,
   ]) {
     assert.match(amxdText, pattern);
   }

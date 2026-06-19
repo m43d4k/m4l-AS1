@@ -26,6 +26,11 @@ const BANK_LABELS = Object.freeze([
   "F5",
 ]);
 
+// live.tab is arranged as five rows: U1/F1, U2/F2, ... U5/F5.
+// Controller state remains in the AS-1's CC#32 order: U1-U5, F1-F5.
+const BANK_TAB_TO_BANK_INDEX = Object.freeze([0, 5, 1, 6, 2, 7, 3, 8, 4, 9]);
+const BANK_INDEX_TO_BANK_TAB = Object.freeze([0, 2, 4, 6, 8, 1, 3, 5, 7, 9]);
+
 const DEFAULT_STATE = Object.freeze({
   bankIndex: 0,
   pcDisplay: 1,
@@ -48,7 +53,7 @@ const UI_SYNC_SELECTORS = Object.freeze([
   {
     selector: "set_bankindex",
     getValue(state) {
-      return state.bankIndex;
+      return bankIndexToBankTabIndex(state.bankIndex);
     },
   },
   {
@@ -82,6 +87,16 @@ function toInt(value, fallback) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function bankTabIndexToBankIndex(value) {
+  const index = clamp(toInt(value, 0), LIMITS.bankIndexMin, LIMITS.bankIndexMax);
+  return BANK_TAB_TO_BANK_INDEX[index];
+}
+
+function bankIndexToBankTabIndex(value) {
+  const index = clamp(toInt(value, 0), LIMITS.bankIndexMin, LIMITS.bankIndexMax);
+  return BANK_INDEX_TO_BANK_TAB[index];
 }
 
 function buildStateViewFromSanitizedState(state) {
@@ -675,7 +690,7 @@ function bang() {
 }
 
 function bankindex(value) {
-  return dispatchValueToMax.call(this, "bankindex", value);
+  return dispatchValueToMax.call(this, "bankindex", bankTabIndexToBankIndex(value));
 }
 
 function pc(value) {
@@ -727,7 +742,11 @@ function anything(...args) {
 const exported = {
   LIMITS,
   BANK_LABELS,
+  BANK_TAB_TO_BANK_INDEX,
+  BANK_INDEX_TO_BANK_TAB,
   DEFAULT_STATE,
+  bankTabIndexToBankIndex,
+  bankIndexToBankTabIndex,
   sanitizeState,
   deriveProgramData,
   buildStateView,
