@@ -76,6 +76,7 @@ NRPNの送信順序は`CC#99=8`, `CC#98=3`, `CC#6=0`, `CC#38=value`とする。
 - UI actions and UI sync use separate `---ui-*-action` / `---ui-*` buses
 - `bankIndex` and `pcDisplay` are the program-selection state
 - `clockMode` is persisted by the MIDI Clock Mode `live.text` parameter
+- Development files remain externally referenced; the device is frozen before distribution
 
 ## Acceptance Criteria
 
@@ -85,3 +86,4 @@ NRPNの送信順序は`CC#99=8`, `CC#98=3`, `CC#6=0`, `CC#38=value`とする。
 - Saved Bank, Program, Delay, and MIDI Clock Mode values restore correctly in Live.
 - MIDI thru remains functional.
 - AS-1 hardware selects representative programs in User and Factory banks.
+- The frozen `.amxd` loads without access to the development folder.

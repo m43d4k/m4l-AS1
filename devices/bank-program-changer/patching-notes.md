@@ -28,7 +28,14 @@ The branches update `---ui-bankindex`, `---ui-pc`, `---ui-delay`, and
 Bank, Program, Delay, and MIDI Clock Mode are Live parameters in `ui_as1.maxpat`. The parent
 `live.thisdevice` trigger starts a restore window. The child patch sends
 `outputvalue` after 50 ms and again after 200 ms, then ends the window at 260 ms.
-The controller restores the program selection and MIDI Clock Mode without UI feedback loops.
+During the restore window, the controller accumulates parameter values without sending MIDI or
+UI sync. A restored Bank value does not reset the independently restored Program value. At
+`restoreend`, the controller syncs the UI, sends the final Bank/Program selection once, and sends
+the MIDI Clock Mode NRPN when that value was restored.
+
+The Max-facing JavaScript `loadbang()` intentionally emits no default state. Restored Live
+parameters remain the source of truth and cannot be overwritten by controller defaults while the
+child patchers are loading.
 
 ## MIDI Clock Mode
 
@@ -40,7 +47,7 @@ There is no second persistence path in JavaScript.
 
 ## Delay Behavior
 
-- Delay menu indexes map to `0`, `5`, and `10` ms.
+- Delay menu indexes `0`, `1`, and `2` map to controller values `0`, `5`, and `10` ms.
 - CC#32 is sent immediately; Program Change may be delayed.
 - Only the latest delayed Program Change is retained.
 - Changing Delay reschedules a pending Program Change without resending CC#32.

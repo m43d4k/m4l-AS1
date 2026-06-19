@@ -29,11 +29,20 @@ MIDI Effect。
 - `logic_as1.maxpat` - non-UI child patch
 - `bank-program-changer_dev.amxd` - Live で読み込む親デバイス
 
+## Distribution
+
+開発中は親デバイスから子パッチとJavaScriptを外部参照する。
+配布前にMax for Liveデバイスをフリーズし、フリーズ後の`.amxd`を
+開発フォルダに依存しない場所から読み込んで確認する。
+
 ## Tests
 
 ```sh
+mise trust
 mise exec node@22 -- node --test *.test.js
 ```
 
-テストはBank境界、MIDI bytes、状態復元用のパッチ構造を検証する。
+初回のみ、実行前にこのディレクトリの`mise.toml`をtrustする。
+テストはBank境界、MIDI bytes、遅延送信のキャンセル、状態復元の制御と
+パッチ構造を検証する。
 リリース前にはMax/Live上の動作とAS-1実機への送信も確認する。

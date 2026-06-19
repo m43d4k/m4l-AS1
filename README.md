@@ -9,3 +9,4 @@ TORAIZ AS-1 向け Max for Live MIDI Effect。
   - `U1-U5 / F1-F5`と`P1-P99`に対応
   - `SEQ`の`SYNC / MANUAL`切り替えに対応
   - MIDI thru、状態保存・復元に対応
+  - 開発中は外部ファイル参照、配布前に`.amxd`をフリーズ
