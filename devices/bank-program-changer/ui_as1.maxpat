@@ -11,7 +11,7 @@
 ,
 		"classnamespace" : "box",
 		"rect" : [ 256.0, 523.0, 1125.0, 746.0 ],
-		"openrect" : [ 0.0, 0.0, 0.0, 133.0 ],
+		"openrect" : [ 0.0, 0.0, 0.0, 159.0 ],
 		"openinpresentation" : 1,
 		"default_fontsize" : 10.0,
 		"default_fontname" : "Arial Bold",
@@ -361,6 +361,85 @@
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-clockmode",
+					"maxclass" : "live.text",
+					"mode" : 1,
+					"numinlets" : 1,
+					"numoutlets" : 2,
+					"outlettype" : [ "", "" ],
+					"parameter_enable" : 1,
+					"patching_rect" : [ 80.0, 330.0, 104.0, 20.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 44.0, 137.0, 62.0, 20.0 ],
+					"saved_attribute_attributes" : 					{
+						"valueof" : 						{
+							"parameter_enum" : [ "SYNC", "MANUAL" ],
+							"parameter_longname" : "Sequencer Play",
+							"parameter_mmax" : 1,
+							"parameter_modmode" : 0,
+							"parameter_shortname" : "SEQ Play",
+							"parameter_type" : 2
+						}
+
+					}
+,
+					"text" : "SYNC",
+					"texton" : "MANUAL",
+					"varname" : "midi_clock_mode"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"fontsize" : 9.5,
+					"id" : "obj-clockmode-label",
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 44.0, 306.0, 28.0, 17.0 ],
+					"presentation" : 1,
+					"presentation_rect" : [ 10.0, 139.0, 28.0, 17.0 ],
+					"text" : "SEQ"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-send-clockmode",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 200.0, 330.0, 126.0, 20.0 ],
+					"text" : "s ---ui-clockmode-action"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-recv-clockmode",
+					"maxclass" : "newobj",
+					"numinlets" : 0,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 800.0, 136.0, 99.0, 20.0 ],
+					"text" : "r ---ui-clockmode"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-set-clockmode",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 800.0, 168.0, 70.0, 20.0 ],
+					"text" : "prepend set"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-send-pc",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -694,6 +773,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-send-clockmode", 0 ],
+					"source" : [ "obj-clockmode", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-delay-send-select", 0 ],
 					"source" : [ "obj-delay", 0 ]
 				}
@@ -702,6 +788,14 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-bank", 0 ],
+					"order" : 3,
+					"source" : [ "obj-delay-init", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-clockmode", 0 ],
 					"order" : 2,
 					"source" : [ "obj-delay-init", 0 ]
 				}
@@ -788,6 +882,13 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-set-clockmode", 0 ],
+					"source" : [ "obj-recv-clockmode", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-set-delay", 0 ],
 					"source" : [ "obj-recv-delay", 0 ]
 				}
@@ -853,6 +954,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-bank", 0 ],
 					"source" : [ "obj-set-bank", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-clockmode", 0 ],
+					"source" : [ "obj-set-clockmode", 0 ]
 				}
 
 			}

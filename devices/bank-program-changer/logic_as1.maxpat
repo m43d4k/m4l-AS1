@@ -29,6 +29,18 @@
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-prepend-clockmode",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 303.0, 95.0, 118.0, 20.0 ],
+					"text" : "prepend clockmode"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"filename" : "bank_pc_controller_as1.js",
 					"id" : "obj-v8",
 					"maxclass" : "newobj",
@@ -102,11 +114,11 @@
 				"box" : 				{
 					"id" : "obj-route-ui",
 					"maxclass" : "newobj",
-					"numinlets" : 4,
-					"numoutlets" : 4,
-					"outlettype" : [ "", "", "", "" ],
-					"patching_rect" : [ 87.0, 207.0, 190.0, 20.0 ],
-					"text" : "route set_bankindex set_pc set_delay"
+					"numinlets" : 5,
+					"numoutlets" : 5,
+					"outlettype" : [ "", "", "", "", "" ],
+					"patching_rect" : [ 87.0, 207.0, 270.0, 20.0 ],
+					"text" : "route set_bankindex set_pc set_delay set_clockmode"
 				}
 
 			}
@@ -155,6 +167,18 @@
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 303.0, 15.0, 100.0, 20.0 ],
 					"text" : "r ---ui-delay-action"
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"id" : "obj-recv-clockmode",
+					"maxclass" : "newobj",
+					"numinlets" : 0,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 303.0, 55.0, 126.0, 20.0 ],
+					"text" : "r ---ui-clockmode-action"
 				}
 
 			}
@@ -241,6 +265,17 @@
 			}
 , 			{
 				"box" : 				{
+					"id" : "obj-send-clockmode-ui",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 415.0, 271.0, 99.0, 20.0 ],
+					"text" : "s ---ui-clockmode"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-send-current-ui",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -286,6 +321,13 @@
 , 			{
 				"patchline" : 				{
 					"destination" : [ "obj-v8", 0 ],
+					"source" : [ "obj-prepend-clockmode", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-v8", 0 ],
 					"source" : [ "obj-prepend-pc", 0 ]
 				}
 
@@ -308,6 +350,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-prepend-delay", 0 ],
 					"source" : [ "obj-recv-delay", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-prepend-clockmode", 0 ],
+					"source" : [ "obj-recv-clockmode", 0 ]
 				}
 
 			}
@@ -364,6 +413,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-send-delay-ui", 0 ],
 					"source" : [ "obj-route-ui", 2 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-send-clockmode-ui", 0 ],
+					"source" : [ "obj-route-ui", 3 ]
 				}
 
 			}

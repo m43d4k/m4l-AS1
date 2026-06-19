@@ -30,6 +30,18 @@
 本デバイスでは、10個の0-based bank valuesとして`0-4=U1-U5`,
 `5-9=F1-F5`を使用する。
 
+## MIDI Clock Mode
+
+MIDI Clock ModeはNRPN `1027`（MSB `8`, LSB `3`）を使用する。
+
+| Device UI | AS-1 mode | Value |
+|---|---|---:|
+| SYNC | Slave | 2 |
+| MANUAL | SlaveNo S/S | 4 |
+
+AS-1の受信形式に従い、NRPN parameterを`CC#99`と`CC#98`、valueを
+`CC#6`と`CC#38`で送信する。
+
 ## Primary Reference
 
 - [Pioneer DJ: TORAIZ AS-1 manuals and documentation](https://www.pioneerdj.com/en/support/documents/production/toraiz-as-1/)
@@ -49,6 +61,7 @@ kept later, record its language, revision, download URL, and retrieval date here
 以下の項目をAS-1実機で確認済み。リリース前の回帰確認にも使用する。
 
 - Set AS-1 `MIDI Control Enable` so external program selection is accepted.
+- Set AS-1 `MIDI Param Rcv` to `NRPN`.
 - Match the Live output channel and AS-1 `MIDI Channel`.
 - Verify `CC#32=0 + PC=0` selects `U1 P1`.
 - Verify `CC#32=4 + PC=98` selects `U5 P99`.
@@ -56,3 +69,4 @@ kept later, record its language, revision, download URL, and retrieval date here
 - Verify `CC#32=9 + PC=98` selects `F5 P99`.
 - Test Bank -> PC delay at `0`, `5`, and `10 ms`.
 - Confirm incoming performance MIDI still passes through while selecting programs.
+- Verify `SEQ SYNC` follows MIDI Start/Stop and `SEQ MANUAL` ignores it.

@@ -9,9 +9,10 @@ MIDI Effect。
 - Program: `P1-P99`
 - Bank Select: `CC#32`, value `0-9`
 - Program Change: value `0-98`
+- SEQ Play: `SYNC / MANUAL`（NRPN `1027`, value `2 / 4`）
 - Bank SelectとProgram Changeの間隔: `0 / 5 / 10 ms`
 - MIDI thru
-- Live SetでのBank、Program、Delayの保存・復元
+- Live SetでのBank、Program、Delay、MIDI Clock Modeの保存・復元
 
 ## Documents
 

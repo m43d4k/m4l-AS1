@@ -58,7 +58,7 @@ test("logic patch keeps controller, MIDI thru, and UI sync wiring", () => {
   assert.equal(boxes.get("obj-midiout").text, "midiout");
   assert.equal(
     boxes.get("obj-route-ui").text,
-    "route set_bankindex set_pc set_delay"
+    "route set_bankindex set_pc set_delay set_clockmode"
   );
 
   assert.ok(hasLine(patch, "obj-midiin", "obj-midiout"));
@@ -67,9 +67,14 @@ test("logic patch keeps controller, MIDI thru, and UI sync wiring", () => {
   assert.ok(hasLine(patch, "obj-v8", "obj-route-status"));
   assert.equal(boxes.get("obj-recv-restore").text, "r ---ui-restore-action");
   assert.ok(hasLine(patch, "obj-recv-restore", "obj-v8"));
+  assert.equal(boxes.get("obj-recv-clockmode").text, "r ---ui-clockmode-action");
+  assert.equal(boxes.get("obj-prepend-clockmode").text, "prepend clockmode");
+  assert.ok(hasLine(patch, "obj-recv-clockmode", "obj-prepend-clockmode"));
+  assert.ok(hasLine(patch, "obj-prepend-clockmode", "obj-v8"));
+  assert.ok(hasLine(patch, "obj-route-ui", "obj-send-clockmode-ui"));
 });
 
-test("ui patch restores bank, program, and delay from a redundant parent-trigger resend", () => {
+test("ui patch restores bank, program, delay, and MIDI clock mode", () => {
   const patch = readJson("ui_as1.maxpat");
   const boxes = getBoxesById(patch);
 
@@ -94,6 +99,7 @@ test("ui patch restores bank, program, and delay from a redundant parent-trigger
   assert.ok(hasLine(patch, "obj-delay-init", "obj-delay"));
   assert.ok(hasLine(patch, "obj-delay-init", "obj-bank"));
   assert.ok(hasLine(patch, "obj-delay-init", "obj-pc"));
+  assert.ok(hasLine(patch, "obj-delay-init", "obj-clockmode"));
 });
 
 test("ui patch exposes the ten AS-1 banks, increment, and decrement for Live mapping", () => {
@@ -101,6 +107,8 @@ test("ui patch exposes the ten AS-1 banks, increment, and decrement for Live map
   const boxes = getBoxesById(patch);
   const bankParameter = boxes.get("obj-bank").saved_attribute_attributes.valueof;
   const programParameter = boxes.get("obj-pc").saved_attribute_attributes.valueof;
+  const clockMode = boxes.get("obj-clockmode");
+  const clockParameter = clockMode.saved_attribute_attributes.valueof;
 
   assert.equal(boxes.get("obj-bank").parameter_enable, 1);
   assert.equal(boxes.get("obj-bank").num_lines_presentation, 10);
@@ -121,6 +129,17 @@ test("ui patch exposes the ten AS-1 banks, increment, and decrement for Live map
   assert.equal(boxes.get("obj-1").saved_attribute_attributes.valueof.parameter_invisible ?? 0, 0);
   assert.equal(boxes.get("obj-2").parameter_enable, 1);
   assert.equal(boxes.get("obj-2").saved_attribute_attributes.valueof.parameter_invisible ?? 0, 0);
+  assert.equal(clockMode.maxclass, "live.text");
+  assert.equal(clockMode.mode, 1);
+  assert.equal(clockMode.parameter_enable, 1);
+  assert.equal(boxes.get("obj-clockmode-label").text, "SEQ");
+  assert.equal(clockMode.text, "SYNC");
+  assert.equal(clockMode.texton, "MANUAL");
+  assert.deepEqual(clockParameter.parameter_enum, ["SYNC", "MANUAL"]);
+  assert.equal(clockParameter.parameter_mmax, 1);
+  assert.ok(hasLine(patch, "obj-clockmode", "obj-send-clockmode"));
+  assert.ok(hasLine(patch, "obj-recv-clockmode", "obj-set-clockmode"));
+  assert.ok(hasLine(patch, "obj-set-clockmode", "obj-clockmode"));
 });
 
 test("parent device still references child patchers and restore trigger pieces", () => {

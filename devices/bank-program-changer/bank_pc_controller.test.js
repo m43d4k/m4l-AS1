@@ -6,7 +6,9 @@ const assert = require("node:assert/strict");
 const {
   DEFAULT_STATE,
   applyNamedAction,
+  buildClockModeMessages,
   buildMidiMessages,
+  buildNrpnMessages,
   buildSendPlan,
   buildStateView,
   createController,
@@ -78,12 +80,13 @@ test("sanitizeState clamps bank/program and normalizes delay", () => {
     bankIndex: 9,
     pcDisplay: 1,
     delay: 0,
+    clockMode: 0,
   });
 });
 
 test("buildStateView combines sanitized state and MIDI values", () => {
   assert.deepEqual(buildStateView({ bankIndex: 2, pcDisplay: 44, delay: 10 }), {
-    state: { bankIndex: 2, pcDisplay: 44, delay: 10 },
+    state: { bankIndex: 2, pcDisplay: 44, delay: 10, clockMode: 0 },
     derived: deriveProgramData(2, 44),
   });
 });
@@ -91,20 +94,20 @@ test("buildStateView combines sanitized state and MIDI values", () => {
 test("reduceState handles bank reset, program clamp, boundaries, and full wrap", () => {
   for (let bankIndex = 0; bankIndex < 9; bankIndex += 1) {
     let boundary = reduceState({ bankIndex, pcDisplay: 99 }, { type: "inc" });
-    assert.deepEqual(boundary.state, { bankIndex: bankIndex + 1, pcDisplay: 1, delay: 0 });
+    assert.deepEqual(boundary.state, { bankIndex: bankIndex + 1, pcDisplay: 1, delay: 0, clockMode: 0 });
 
     boundary = reduceState(boundary.state, { type: "dec" });
-    assert.deepEqual(boundary.state, { bankIndex, pcDisplay: 99, delay: 0 });
+    assert.deepEqual(boundary.state, { bankIndex, pcDisplay: 99, delay: 0, clockMode: 0 });
   }
 
   let result = reduceState({ bankIndex: 9, pcDisplay: 99 }, { type: "inc" });
   assert.deepEqual(result.state, DEFAULT_STATE);
 
   result = reduceState(DEFAULT_STATE, { type: "dec" });
-  assert.deepEqual(result.state, { bankIndex: 9, pcDisplay: 99, delay: 0 });
+  assert.deepEqual(result.state, { bankIndex: 9, pcDisplay: 99, delay: 0, clockMode: 0 });
 
   result = reduceState({ bankIndex: 2, pcDisplay: 44 }, { type: "bankindex", value: 5 });
-  assert.deepEqual(result.state, { bankIndex: 5, pcDisplay: 1, delay: 0 });
+  assert.deepEqual(result.state, { bankIndex: 5, pcDisplay: 1, delay: 0, clockMode: 0 });
 
   result = reduceState(result.state, { type: "pc", value: 100 });
   assert.equal(result.state.pcDisplay, 99);
@@ -123,13 +126,25 @@ test("MIDI and delayed-send plans use bank/program state", () => {
   assert.equal(plan.delayMs, 10);
 });
 
-test("controller sync contains only bank, program, and delay", () => {
+test("MIDI clock mode uses NRPN 1027 values 2 and 4", () => {
+  assert.deepEqual(buildNrpnMessages(1027, 2), [
+    [176, 99, 8],
+    [176, 98, 3],
+    [176, 6, 0],
+    [176, 38, 2],
+  ]);
+  assert.deepEqual(buildClockModeMessages(0), buildNrpnMessages(1027, 2));
+  assert.deepEqual(buildClockModeMessages(1), buildNrpnMessages(1027, 4));
+});
+
+test("controller sync contains bank, program, delay, and MIDI clock mode", () => {
   const { controller, ui, status } = createRuntime({ bankIndex: 2, pcDisplay: 44, delay: 10 });
   controller.loadbang();
   assert.deepEqual(ui, [
     ["set_bankindex", 2],
     ["set_pc", 44],
     ["set_delay", 10],
+    ["set_clockmode", 0],
   ]);
   assert.deepEqual(status, [
     formatCurrentStatus(controller.getState()),
@@ -148,10 +163,11 @@ test("createMaxController routes MIDI, UI, and status to Max outlets", () => {
     const controller = createMaxController({});
     controller.loadbang();
     controller.send();
-    assert.deepEqual(outletCalls.slice(0, 3), [
+    assert.deepEqual(outletCalls.slice(0, 4), [
       [1, "set_bankindex", 0],
       [1, "set_pc", 1],
       [1, "set_delay", 0],
+      [1, "set_clockmode", 0],
     ]);
     assert.deepEqual(outletCalls.slice(-4), [
       [0, [176, 32, 0]],
@@ -171,7 +187,7 @@ test("bank, program, increment, and decrement update state and emit MIDI", () =>
   controller.pc(42);
   controller.inc();
   controller.dec();
-  assert.deepEqual(controller.getState(), { bankIndex: 1, pcDisplay: 42, delay: 0 });
+  assert.deepEqual(controller.getState(), { bankIndex: 1, pcDisplay: 42, delay: 0, clockMode: 0 });
   assert.deepEqual(midi.slice(-2), [[176, 32, 1], [192, 41]]);
 });
 
@@ -180,6 +196,14 @@ test("applyNamedAction no longer exposes a global action", () => {
   applyNamedAction(controller, "pc", 44);
   assert.equal(controller.getState().pcDisplay, 44);
   assert.throws(() => applyNamedAction(controller, "global", 44), /Unknown controller method/);
+});
+
+test("clock mode toggle sends only its NRPN sequence", () => {
+  const { controller, midi, ui } = createRuntime(DEFAULT_STATE);
+  controller.clockmode(1);
+  assert.deepEqual(controller.getState(), { ...DEFAULT_STATE, clockMode: 1 });
+  assert.deepEqual(midi, buildClockModeMessages(1));
+  assert.deepEqual(ui.at(-1), ["set_clockmode", 1]);
 });
 
 test("a state change replaces a pending delayed program snapshot", () => {
@@ -202,22 +226,24 @@ test("delay change reschedules a pending program without resending bank select",
   assert.deepEqual(midi.at(-1), [192, 43]);
 });
 
-test("restore coalesces restored bank, program, and delay into one send", () => {
+test("restore coalesces saved program state and restores MIDI clock mode", () => {
   const { controller, scheduler, midi, ui } = createRuntime(DEFAULT_STATE);
   controller.restorebegin();
   controller.bankindex(5);
   controller.pc(44);
   controller.delay(10);
+  controller.clockmode(1);
   assert.deepEqual(midi, []);
   assert.deepEqual(ui, []);
   controller.restoreend();
-  assert.deepEqual(controller.getState(), { bankIndex: 5, pcDisplay: 44, delay: 10 });
+  assert.deepEqual(controller.getState(), { bankIndex: 5, pcDisplay: 44, delay: 10, clockMode: 1 });
   assert.deepEqual(ui, [
     ["set_bankindex", 5],
     ["set_pc", 44],
     ["set_delay", 10],
+    ["set_clockmode", 1],
   ]);
-  assert.deepEqual(midi, [[176, 32, 5]]);
+  assert.deepEqual(midi, [[176, 32, 5], ...buildClockModeMessages(1)]);
   scheduler.flushAll();
   assert.deepEqual(midi.at(-1), [192, 43]);
 });
@@ -227,7 +253,7 @@ test("restore does not let bank reset or UI sync overwrite a saved program", () 
   controller.restorebegin();
   controller.bankindex(5);
 
-  assert.deepEqual(controller.getState(), { bankIndex: 5, pcDisplay: 73, delay: 0 });
+  assert.deepEqual(controller.getState(), { bankIndex: 5, pcDisplay: 73, delay: 0, clockMode: 0 });
   assert.deepEqual(ui, []);
 
   controller.restoreend();
@@ -235,6 +261,7 @@ test("restore does not let bank reset or UI sync overwrite a saved program", () 
     ["set_bankindex", 5],
     ["set_pc", 73],
     ["set_delay", 0],
+    ["set_clockmode", 0],
   ]);
 });
 

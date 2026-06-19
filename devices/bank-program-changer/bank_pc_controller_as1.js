@@ -8,6 +8,8 @@ const LIMITS = Object.freeze({
   bankIndexMax: 9,
   pcMin: 1,
   pcMax: 99,
+  clockModeMin: 0,
+  clockModeMax: 1,
   validDelays: [0, 5, 10],
 });
 
@@ -28,12 +30,19 @@ const DEFAULT_STATE = Object.freeze({
   bankIndex: 0,
   pcDisplay: 1,
   delay: 0,
+  clockMode: 0,
 });
 const MIDI_CONSTANTS = Object.freeze({
   ccStatus: 176,
   bankLsbController: 32,
   pcStatus: 192,
+  nrpnMsbController: 99,
+  nrpnLsbController: 98,
+  dataEntryMsbController: 6,
+  dataEntryLsbController: 38,
+  midiClockModeNrpn: 1027,
 });
+const CLOCK_MODE_VALUES = Object.freeze([2, 4]);
 
 const UI_SYNC_SELECTORS = Object.freeze([
   {
@@ -52,6 +61,12 @@ const UI_SYNC_SELECTORS = Object.freeze([
     selector: "set_delay",
     getValue(state) {
       return state.delay;
+    },
+  },
+  {
+    selector: "set_clockmode",
+    getValue(state) {
+      return state.clockMode;
     },
   },
 ]);
@@ -99,6 +114,11 @@ function sanitizeState(input) {
       LIMITS.pcMax
     ),
     delay: sanitizeDelay(state.delay),
+    clockMode: clamp(
+      toInt(state.clockMode, DEFAULT_STATE.clockMode),
+      LIMITS.clockModeMin,
+      LIMITS.clockModeMax
+    ),
   };
 }
 
@@ -214,6 +234,21 @@ const ACTION_SPECS = Object.freeze({
       return { ...state, delay: sanitizeDelay(value) };
     },
   },
+  clockmode: {
+    acceptsValue: true,
+    shouldSend: false,
+    shouldSendClockMode: true,
+    reduce(state, value) {
+      return {
+        ...state,
+        clockMode: clamp(
+          toInt(value, state.clockMode),
+          LIMITS.clockModeMin,
+          LIMITS.clockModeMax
+        ),
+      };
+    },
+  },
   send: {
     acceptsValue: false,
     shouldSend: true,
@@ -248,7 +283,29 @@ function reduceState(state, action) {
   return {
     state: transition.reduce(safeState, action.value),
     shouldSend: transition.shouldSend,
+    shouldSendClockMode: transition.shouldSendClockMode === true,
   };
+}
+
+function buildNrpnMessages(parameterNumber, value) {
+  const parameter = clamp(toInt(parameterNumber, 0), 0, 16383);
+  const parameterValue = clamp(toInt(value, 0), 0, 16383);
+
+  return [
+    [MIDI_CONSTANTS.ccStatus, MIDI_CONSTANTS.nrpnMsbController, parameter >> 7],
+    [MIDI_CONSTANTS.ccStatus, MIDI_CONSTANTS.nrpnLsbController, parameter & 0x7f],
+    [MIDI_CONSTANTS.ccStatus, MIDI_CONSTANTS.dataEntryMsbController, parameterValue >> 7],
+    [MIDI_CONSTANTS.ccStatus, MIDI_CONSTANTS.dataEntryLsbController, parameterValue & 0x7f],
+  ];
+}
+
+function buildClockModeMessages(clockMode) {
+  const index = clamp(
+    toInt(clockMode, DEFAULT_STATE.clockMode),
+    LIMITS.clockModeMin,
+    LIMITS.clockModeMax
+  );
+  return buildNrpnMessages(MIDI_CONSTANTS.midiClockModeNrpn, CLOCK_MODE_VALUES[index]);
 }
 
 function buildMidiMessages(state) {
@@ -349,6 +406,7 @@ function createController(runtime) {
     pendingSend: null,
     isRestoring: false,
     restoreDirty: false,
+    restoreClockModeDirty: false,
     runtime: {
       emitMidi: env.emitMidi || function noopMidi() {},
       emitUi: env.emitUi || function noopUi() {},
@@ -444,22 +502,34 @@ function createController(runtime) {
       this.emitStatusLines();
     },
 
+    sendClockMode() {
+      this.emitMessageList(buildClockModeMessages(this.state.clockMode));
+      this.emitStatusLines();
+    },
+
     beginRestore() {
       this.cancelPendingSend();
       this.isRestoring = true;
       this.restoreDirty = false;
+      this.restoreClockModeDirty = false;
       this.emitStatusLines();
     },
 
     endRestore() {
       const shouldFlush = this.isRestoring && this.restoreDirty;
+      const shouldFlushClockMode = this.isRestoring && this.restoreClockModeDirty;
       this.isRestoring = false;
       this.restoreDirty = false;
+      this.restoreClockModeDirty = false;
       this.emitUiState();
 
       if (shouldFlush) {
         this.sendCurrentState();
-      } else {
+      }
+
+      if (shouldFlushClockMode) {
+        this.sendClockMode();
+      } else if (!shouldFlush) {
         this.emitStatusLines();
       }
     },
@@ -492,12 +562,18 @@ function createController(runtime) {
         if (result.shouldSend || action.type === "delay") {
           this.restoreDirty = true;
         }
+        if (result.shouldSendClockMode) {
+          this.restoreClockModeDirty = true;
+        }
 
         this.cancelPendingSend();
         this.emitStatusLines();
       } else if (result.shouldSend) {
         this.emitUiState();
         this.sendCurrentState();
+      } else if (result.shouldSendClockMode) {
+        this.emitUiState();
+        this.sendClockMode();
       } else if (action.type === "delay" && hadPendingSend) {
         this.emitUiState();
         this.reconcilePendingDelayChange();
@@ -626,6 +702,10 @@ function delay(value) {
   return dispatchValueToMax.call(this, "delay", value);
 }
 
+function clockmode(value) {
+  return dispatchValueToMax.call(this, "clockmode", value);
+}
+
 function restorebegin() {
   return dispatchActionToMax.call(this, "restorebegin");
 }
@@ -657,6 +737,8 @@ const exported = {
   decrementProgram,
   reduceState,
   buildMidiMessages,
+  buildNrpnMessages,
+  buildClockModeMessages,
   buildSendPlan,
   formatCurrentStatus,
   formatSendStatus,

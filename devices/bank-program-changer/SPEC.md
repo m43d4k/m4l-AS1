@@ -39,12 +39,22 @@ programChange = pcDisplay - 1;  // 0..98
 Bank Select と Program Change の間隔は `0 / 5 / 10 ms` から選ぶ。
 MIDI channel は Live track の routing と AS-1 の設定を一致させる。
 
+MIDI Clock ModeはNRPN `1027`で送信する。
+
+| UI | AS-1 mode | NRPN value |
+|---|---|---:|
+| SYNC | Slave | 2 |
+| MANUAL | SlaveNo S/S | 4 |
+
+NRPNの送信順序は`CC#99=8`, `CC#98=3`, `CC#6=0`, `CC#38=value`とする。
+
 ## UI
 
 - Bank selector: `U1 U2 U3 U4 U5 F1 F2 F3 F4 F5`
 - Increase / Decrease buttons
 - Program input: `1-99`
 - Bank -> PC Delay: `0 / 5 / 10 ms`
+- `SEQ` label with `SYNC / MANUAL` toggle
 
 ## Behavior
 
@@ -54,6 +64,7 @@ MIDI channel は Live track の routing と AS-1 の設定を一致させる。
 - `F5 / 99 + 1 -> U1 / 1`, `U1 / 1 - 1 -> F5 / 99`.
 - Delayed Program Change は常に最新の送信要求だけを保持する。
 - Delay の変更だけでは Bank Select を再送しない。
+- MIDI Clock Modeの変更は対応するNRPNだけを送信する。
 
 ## Architecture
 
@@ -64,11 +75,13 @@ MIDI channel は Live track の routing と AS-1 の設定を一致させる。
 - MIDI thru: `[midiin] -> [midiout]`
 - UI actions and UI sync use separate `---ui-*-action` / `---ui-*` buses
 - `bankIndex` and `pcDisplay` are the program-selection state
+- `clockMode` is persisted by the MIDI Clock Mode `live.text` parameter
 
 ## Acceptance Criteria
 
 - JavaScript tests cover program and bank boundaries and complete wrap.
 - Generated messages use only `CC#32=0..9` and `PC=0..98` for selection.
-- Saved Bank, Program, and Delay values restore correctly in Live.
+- MIDI Clock Mode sends NRPN `1027` with value `2` or `4`.
+- Saved Bank, Program, Delay, and MIDI Clock Mode values restore correctly in Live.
 - MIDI thru remains functional.
 - AS-1 hardware selects representative programs in User and Factory banks.
